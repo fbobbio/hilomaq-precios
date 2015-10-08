@@ -1,5 +1,7 @@
 package com.init.hmaq.precios.domain;
 
+import com.init.hmaq.utils.Constants;
+
 public class ItemProvider {
 	
 	public String code;
@@ -10,8 +12,21 @@ public class ItemProvider {
 	public double unitPrice;
 	public String unitPriceFormula;
 	
+	/** 
+	 * Precio calculado con IVA 
+	 * 
+	 * @return
+	 */
+	public double getIVAPrice() {
+		return basePrice * Constants.IVA;
+	}
+	
 	public String toString() {
-		return "Código: " + code + "\nPrecio base: " + basePrice + "\nDescripción: " + description + "\nPresentación: " + presentation;
+		return "Código: " + code + 
+				"\nPrecio base: " + basePrice +
+				"\nPrecio con IVA: " + getIVAPrice() +
+				"\nDescripción: " + description + 
+				"\nPresentación: " + presentation;
 	}
 	
 	public String getCode() {
