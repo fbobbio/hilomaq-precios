@@ -43,6 +43,7 @@ public class Integrator {
 		    for(int r = 0; r < rows; r++) {
 		        row = sheet.getRow(r);
 		        if(row != null) {
+		        	// TODO: Revisar cuándo comienzan las columnas de datos y empezar a cargar los objetos ahí
 		            for(int c = 0; c < cols; c++) {
 		                cell = row.getCell(c);
 		                if(cell != null) {
