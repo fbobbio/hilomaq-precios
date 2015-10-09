@@ -21,6 +21,10 @@ import com.init.hmaq.precios.domain.ItemProvider;
  */
 public class Integrator {
 
+	/**
+	 * Método que a partir de un archivo Excel levanta sus datos a objetos
+	 * @param file
+	 */
 	public static void openExcelFile(File file) {
 		try {
 			POIFSFileSystem fs = new POIFSFileSystem(new FileInputStream(file));
@@ -122,6 +126,11 @@ public class Integrator {
 				.getStringCellValue().equalsIgnoreCase("codigo"));
 	}
 
+	/**
+	 * Método que levanta a partir de una fila de datos el objeto ItemProvider correspondiente
+	 * @param row
+	 * @return
+	 */
 	private static ItemProvider importItemFromRow(HSSFRow row) {
 		ItemProvider ret = null;
 		if (row != null && row.getCell(0) != null && row.getCell(0).getCellType() != HSSFCell.CELL_TYPE_BLANK) {
