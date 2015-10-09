@@ -24,56 +24,88 @@ public class Integrator {
 	public static void openExcelFile(File file) {
 		try {
 			POIFSFileSystem fs = new POIFSFileSystem(new FileInputStream(file));
-			HSSFWorkbook wb = new HSSFWorkbook(fs);
-			HSSFSheet sheet = wb.getSheetAt(0);
-			HSSFRow row;
-			HSSFCell cell;
-
-			int rows; // No of rows
-			rows = sheet.getPhysicalNumberOfRows();
-
-			int cols = 0; // No of columns
-			int tmp = 0;
-
-			// This trick ensures that we get the data properly even if it
-			// doesn't start from first few rows
-			for (int i = 0; i < 10 || i < rows; i++) {
-				row = sheet.getRow(i);
-				if (row != null) {
-					tmp = sheet.getRow(i).getPhysicalNumberOfCells();
-					if (tmp > cols)
-						cols = tmp;
-				}
-			}
+			HSSFSheet sheet = new HSSFWorkbook(fs).getSheetAt(0);
 
 			// Índice de fila donde comenzarán los datos
-			int dataInitIndex;
-			for (dataInitIndex = 0; dataInitIndex < rows; dataInitIndex++) {
-				row = sheet.getRow(dataInitIndex);
-				// Evalúo si la fila es la de los Encabezados
-				if (row != null && evaluateHeaderRow(row)) {
-					dataInitIndex++;
-					break;
-				}
-			}
+			int firstDataRowIndex = getFirstDataRowIndex(sheet);
 
 			// Lista de artículos exportados desde excel
-			List<ItemProvider> list = new ArrayList<ItemProvider>();
-
-			// Ciclo que recorre los datos levantándolos a objeto
-			for (; dataInitIndex < rows; dataInitIndex++) {
-				row = sheet.getRow(dataInitIndex);
-				ItemProvider item = importItemFromRow(row);
-				if (item != null)
-					list.add(item);
-				System.out.println("\n" + list.get(list.size() - 1));
-			}
+			List<ItemProvider> list = importItems(sheet, firstDataRowIndex);
 
 			System.out.println("\n\nSE ENCONTRARON UN TOTAL DE " + list.size()
 					+ " ARTÍCULOS EN LA LISTA " + file.getName());
 		} catch (Exception ioe) {
 			ioe.printStackTrace();
 		}
+	}
+
+	/**
+	 * Método que levanta las filas de un sheet a objetos
+	 * 
+	 * @param sheet
+	 * @param firstDataRowIndex
+	 * @return la lista de artículos populada
+	 */
+	private static List<ItemProvider> importItems(HSSFSheet sheet, int firstDataRowIndex) {
+		List<ItemProvider> list = new ArrayList<ItemProvider>();
+		int rows = sheet.getPhysicalNumberOfRows();
+		HSSFRow row;
+		// Ciclo que recorre los datos levantándolos a objeto
+		for (; firstDataRowIndex < rows; firstDataRowIndex++) {
+			row = sheet.getRow(firstDataRowIndex);
+			ItemProvider item = importItemFromRow(row);
+			if (item != null)
+				list.add(item);
+			System.out.println("\n" + list.get(list.size() - 1));
+		}
+		return list;
+	}
+
+	/**
+	 * Método que calcula el índice de la primer fila que contiene data para cargar
+	 * 
+	 * @param sheet
+	 * @return
+	 */
+	private static int getFirstDataRowIndex(HSSFSheet sheet) {
+		int dataInitIndex;
+		HSSFRow row;
+		int rows = sheet.getPhysicalNumberOfRows();
+		for (dataInitIndex = 0; dataInitIndex < rows; dataInitIndex++) {
+			row = sheet.getRow(dataInitIndex);
+			// Evalúo si la fila es la de los Encabezados
+			if (row != null && evaluateHeaderRow(row)) {
+				dataInitIndex++;
+				break;
+			}
+		}
+		return dataInitIndex;
+	}
+
+	/**
+	 * Método que calcula la cantidad de columnas que tiene un sheet de excel
+	 * 
+	 * @param sheet
+	 * @param rows
+	 * @return
+	 */
+	private static int getCols(HSSFSheet sheet, int rows) {
+
+		int tmp = 0;
+		int cols = 0;
+		HSSFRow row;
+
+		// This trick ensures that we get the data properly even if it
+		// doesn't start from first few rows
+		for (int i = 0; i < 10 || i < rows; i++) {
+			row = sheet.getRow(i);
+			if (row != null) {
+				tmp = sheet.getRow(i).getPhysicalNumberOfCells();
+				if (tmp > cols)
+					cols = tmp;
+			}
+		}
+		return cols;
 	}
 
 	/**
