@@ -31,7 +31,7 @@ public class Integrator {
 			HSSFSheet sheet = new HSSFWorkbook(fs).getSheetAt(0);
 
 			// Índice de fila donde comenzarán los datos
-			int firstDataRowIndex = getFirstDataRowIndex(sheet);
+			int firstDataRowIndex = getFirstDataRowIndex(sheet,"Artículo");
 
 			// Lista de artículos exportados desde excel
 			List<ItemProvider> list = importItems(sheet, firstDataRowIndex);
@@ -58,9 +58,10 @@ public class Integrator {
 		for (; firstDataRowIndex < rows; firstDataRowIndex++) {
 			row = sheet.getRow(firstDataRowIndex);
 			ItemProvider item = importItemFromRow(row);
-			if (item != null)
+			if (item != null) {
 				list.add(item);
-			System.out.println("\n" + list.get(list.size() - 1));
+				System.out.println("\n" + list.get(list.size() - 1));
+			}
 		}
 		return list;
 	}
@@ -71,14 +72,14 @@ public class Integrator {
 	 * @param sheet
 	 * @return
 	 */
-	private static int getFirstDataRowIndex(HSSFSheet sheet) {
+	private static int getFirstDataRowIndex(HSSFSheet sheet, String mainHeader) {
 		int dataInitIndex;
 		HSSFRow row;
 		int rows = sheet.getPhysicalNumberOfRows();
 		for (dataInitIndex = 0; dataInitIndex < rows; dataInitIndex++) {
 			row = sheet.getRow(dataInitIndex);
 			// Evalúo si la fila es la de los Encabezados
-			if (row != null && evaluateHeaderRow(row)) {
+			if (row != null && evaluateHeaderRow(row,mainHeader)) {
 				dataInitIndex++;
 				break;
 			}
@@ -119,11 +120,11 @@ public class Integrator {
 	 * @param row
 	 * @return
 	 */
-	private static boolean evaluateHeaderRow(HSSFRow row) {
+	private static boolean evaluateHeaderRow(HSSFRow row, String mainHeader) {
 		HSSFCell firstCell = row.getCell(0);
 		return (firstCell != null
 				&& firstCell.getCellType() == HSSFCell.CELL_TYPE_STRING && firstCell
-				.getStringCellValue().equalsIgnoreCase("codigo"));
+				.getStringCellValue().equalsIgnoreCase(mainHeader));
 	}
 
 	/**
