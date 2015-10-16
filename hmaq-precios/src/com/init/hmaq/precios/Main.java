@@ -10,7 +10,10 @@ import com.init.hmaq.precios.domain.DataInterval;
 
 public class Main {
 	
+	//TODO: Implementar tests
 	//TODO: Arreglar el tema del mapeo de columnas que ta feito
+	//TODO: Hacer interfáz simple de uso para que configuren los intervalos visualmente
+	
 	
 	public static void main (String[] args) {
 		File f = new File("../lists/cordon.xls");
