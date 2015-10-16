@@ -11,7 +11,10 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 
+import com.init.hmaq.precios.domain.DataInterval;
+import com.init.hmaq.precios.domain.ExcelFile;
 import com.init.hmaq.precios.domain.ItemProvider;
+import com.init.hmaq.utils.SheetUtils;
 
 /**
  * Clase que levanta archivos excel y los lleva a objetos
@@ -23,62 +26,68 @@ public class Integrator {
 
 	/**
 	 * Método que a partir de un archivo Excel levanta sus datos a objetos
-	 * @param file
+	 * 
+	 * @param excelFile
 	 */
-	public static void openExcelFile(File file) {
-		try {
-			POIFSFileSystem fs = new POIFSFileSystem(new FileInputStream(file));
-			HSSFSheet sheet = new HSSFWorkbook(fs).getSheetAt(0);
+	public static void openExcelFile(ExcelFile excelFile) {
+		// Lista de artículos exportados desde excel
+		List<ItemProvider> list = importItems(excelFile);
 
-			// Índice de fila donde comenzarán los datos
-			int firstDataRowIndex = getFirstDataRowIndex(sheet);
-
-			// Lista de artículos exportados desde excel
-			List<ItemProvider> list = importItems(sheet, firstDataRowIndex);
-
-			System.out.println("\n\nSE ENCONTRARON UN TOTAL DE " + list.size()
-					+ " ARTÍCULOS EN LA LISTA " + file.getName());
-		} catch (Exception ioe) {
-			ioe.printStackTrace();
-		}
+		System.out.println("\n\nSE ENCONTRARON UN TOTAL DE " + list.size()
+				+ " ARTÍCULOS EN LA LISTA " + excelFile.getFile().getName());
 	}
 
 	/**
 	 * Método que levanta las filas de un sheet a objetos
 	 * 
-	 * @param sheet
-	 * @param firstDataRowIndex
+	 * @param excelFile
 	 * @return la lista de artículos populada
 	 */
-	private static List<ItemProvider> importItems(HSSFSheet sheet, int firstDataRowIndex) {
-		List<ItemProvider> list = new ArrayList<ItemProvider>();
-		int rows = sheet.getPhysicalNumberOfRows();
-		HSSFRow row;
-		// Ciclo que recorre los datos levantándolos a objeto
-		for (; firstDataRowIndex < rows; firstDataRowIndex++) {
-			row = sheet.getRow(firstDataRowIndex);
-			ItemProvider item = importItemFromRow(row);
-			if (item != null)
-				list.add(item);
-			System.out.println("\n" + list.get(list.size() - 1));
+	private static List<ItemProvider> importItems(ExcelFile excelFile) {
+
+		try {
+			POIFSFileSystem fs = new POIFSFileSystem(new FileInputStream(
+					excelFile.getFile()));
+			HSSFSheet sheet = new HSSFWorkbook(fs).getSheetAt(0);
+
+			List<ItemProvider> list = new ArrayList<ItemProvider>();
+			HSSFRow row;
+
+			// Ciclo que recorre los datos levantándolos a objeto
+			for (DataInterval interval : excelFile.getIntervals()) {
+				for (int i = interval.getInitIndex() - 1; i < interval
+						.getEndIndex(); i++) {
+					row = sheet.getRow(i);
+					ItemProvider item = importItemFromRow(row,
+							excelFile.getColumnsIndexes());
+					if (item != null) {
+						list.add(item);
+						System.out.println("\n" + list.get(list.size() - 1));
+					}
+				}
+			}
+			return list;
+		} catch (Exception ioe) {
+			ioe.printStackTrace();
+			return null;
 		}
-		return list;
 	}
 
 	/**
-	 * Método que calcula el índice de la primer fila que contiene data para cargar
+	 * Método que calcula el índice de la primer fila que contiene data para
+	 * cargar
 	 * 
 	 * @param sheet
 	 * @return
 	 */
-	private static int getFirstDataRowIndex(HSSFSheet sheet) {
+	private static int getFirstDataRowIndex(HSSFSheet sheet, String mainHeader) {
 		int dataInitIndex;
 		HSSFRow row;
 		int rows = sheet.getPhysicalNumberOfRows();
 		for (dataInitIndex = 0; dataInitIndex < rows; dataInitIndex++) {
 			row = sheet.getRow(dataInitIndex);
 			// Evalúo si la fila es la de los Encabezados
-			if (row != null && evaluateHeaderRow(row)) {
+			if (row != null && evaluateHeaderRow(row, mainHeader)) {
 				dataInitIndex++;
 				break;
 			}
@@ -119,26 +128,30 @@ public class Integrator {
 	 * @param row
 	 * @return
 	 */
-	private static boolean evaluateHeaderRow(HSSFRow row) {
+	private static boolean evaluateHeaderRow(HSSFRow row, String mainHeader) {
 		HSSFCell firstCell = row.getCell(0);
 		return (firstCell != null
 				&& firstCell.getCellType() == HSSFCell.CELL_TYPE_STRING && firstCell
-				.getStringCellValue().equalsIgnoreCase("codigo"));
+				.getStringCellValue().equalsIgnoreCase(mainHeader));
 	}
 
 	/**
-	 * Método que levanta a partir de una fila de datos el objeto ItemProvider correspondiente
+	 * Método que levanta a partir de una fila de datos el objeto ItemProvider
+	 * correspondiente
+	 * 
 	 * @param row
 	 * @return
 	 */
-	private static ItemProvider importItemFromRow(HSSFRow row) {
+	private static ItemProvider importItemFromRow(HSSFRow row, int[] cols) {
 		ItemProvider ret = null;
-		if (row != null && row.getCell(0) != null && row.getCell(0).getCellType() != HSSFCell.CELL_TYPE_BLANK) {
+		if (row != null
+				&& row.getCell(cols[0]) != null
+				&& row.getCell(cols[0]).getCellType() != HSSFCell.CELL_TYPE_BLANK) {
 			ret = new ItemProvider();
-			ret.setCode(row.getCell(0).getStringCellValue().replaceAll("'", ""));
-			ret.setDescription(row.getCell(1).getStringCellValue());
-			ret.setPresentation(row.getCell(2).getStringCellValue());
-			ret.setBasePrice(row.getCell(3).getNumericCellValue());
+			ret.setCode(SheetUtils.getStringValueFromCell(row.getCell(cols[0])).replaceAll("'", ""));
+			ret.setDescription(SheetUtils.getStringValueFromCell(row.getCell(cols[2])));
+			ret.setPresentation(SheetUtils.getStringValueFromCell(row.getCell(cols[3])));
+			ret.setBasePrice(row.getCell(cols[1]).getNumericCellValue());
 			return ret;
 		}
 		return null;
