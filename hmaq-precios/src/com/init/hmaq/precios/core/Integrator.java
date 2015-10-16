@@ -14,6 +14,7 @@ import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import com.init.hmaq.precios.domain.DataInterval;
 import com.init.hmaq.precios.domain.ExcelFile;
 import com.init.hmaq.precios.domain.ItemProvider;
+import com.init.hmaq.utils.SheetUtils;
 
 /**
  * Clase que levanta archivos excel y los lleva a objetos
@@ -54,7 +55,7 @@ public class Integrator {
 
 			// Ciclo que recorre los datos levantándolos a objeto
 			for (DataInterval interval : excelFile.getIntervals()) {
-				for (int i = interval.getInitIndex(); i < interval
+				for (int i = interval.getInitIndex() - 1; i < interval
 						.getEndIndex(); i++) {
 					row = sheet.getRow(i);
 					ItemProvider item = importItemFromRow(row,
@@ -147,10 +148,9 @@ public class Integrator {
 				&& row.getCell(cols[0]) != null
 				&& row.getCell(cols[0]).getCellType() != HSSFCell.CELL_TYPE_BLANK) {
 			ret = new ItemProvider();
-			ret.setCode(row.getCell(cols[0]).getStringCellValue()
-					.replaceAll("'", ""));
-			ret.setDescription(row.getCell(cols[2]).getStringCellValue());
-			ret.setPresentation(row.getCell(cols[3]).getStringCellValue());
+			ret.setCode(SheetUtils.getStringValueFromCell(row.getCell(cols[0])).replaceAll("'", ""));
+			ret.setDescription(SheetUtils.getStringValueFromCell(row.getCell(cols[2])));
+			ret.setPresentation(SheetUtils.getStringValueFromCell(row.getCell(cols[3])));
 			ret.setBasePrice(row.getCell(cols[1]).getNumericCellValue());
 			return ret;
 		}
