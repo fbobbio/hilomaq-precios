@@ -56,8 +56,8 @@ public class Main {
 		intervals.add(i13);
 		intervals.add(i14);
 		intervals.add(i15);
-		excelFile.setIntervals(intervals);
 		
+		excelFile.setIntervals(intervals);		
 		
 		Integrator.openExcelFile(excelFile);
 	}
