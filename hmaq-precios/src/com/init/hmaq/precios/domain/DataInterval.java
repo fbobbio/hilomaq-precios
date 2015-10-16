@@ -16,6 +16,12 @@ public class DataInterval {
 	/** Fila donde se encuentra la categoría */
 	private int categoryIndex;
 	
+	public DataInterval(int initIndex, int endIndex) {
+		super();
+		this.initIndex = initIndex;
+		this.endIndex = endIndex;
+	}
+	
 	public DataInterval(int initIndex, int endIndex, int categoryIndex) {
 		super();
 		this.initIndex = initIndex;

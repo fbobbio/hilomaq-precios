@@ -29,12 +29,13 @@ public class Integrator {
 	 * 
 	 * @param excelFile
 	 */
-	public static void openExcelFile(ExcelFile excelFile) {
+	public static List<ItemProvider> openExcelFile(ExcelFile excelFile) {
 		// Lista de artículos exportados desde excel
 		List<ItemProvider> list = importItems(excelFile);
 
 		System.out.println("\n\nSE ENCONTRARON UN TOTAL DE " + list.size()
 				+ " ARTÍCULOS EN LA LISTA " + excelFile.getFile().getName());
+		return list;
 	}
 
 	/**
@@ -62,7 +63,7 @@ public class Integrator {
 							excelFile.getColumnsIndexes());
 					if (item != null) {
 						list.add(item);
-						System.out.println("\n" + list.get(list.size() - 1));
+						//System.out.println("\n" + list.get(list.size() - 1));
 					}
 				}
 			}
